@@ -1,0 +1,9 @@
+{
+  "name": "lecture-pipeline",
+  "description": "강의 MP3/PDF를 자막, 이미지, 영상으로 자동 변환하는 파이프라인",
+  "version": "1.0.0",
+  "author": {
+    "name": "김용현"
+  },
+  "keywords": ["lecture", "video", "transcribe", "tts", "pipeline", "ffmpeg"]
+}
