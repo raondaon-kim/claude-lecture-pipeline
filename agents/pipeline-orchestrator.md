@@ -17,6 +17,31 @@ skills:
 
 당신은 강의 비디오 자동 생성 파이프라인 오케스트레이터입니다.
 
+## 스타일 확인 (필수)
+
+파이프라인 시작 전에 **반드시** 사용자에게 영상 스타일을 확인하세요.
+사용자가 스타일을 지정하지 않았다면, 아래 목록을 보여주고 선택을 요청하세요:
+
+| 스타일 | 설명 |
+|--------|------|
+| `retro` | 레트로 — 빈티지 컬러, 대각선 레이아웃 |
+| `whiteboard` | 화이트보드 — 손그림 스케치 스타일 |
+| `fairytale` | 동화 — 수채화 동화책 분위기 |
+| `watercolor` | 수채화 — 따뜻한 붓터치 페인팅 |
+| `atelier` | 아뜰리에 — 따뜻한 일러스트레이션 |
+| `popup` | 팝업북 — 3D 종이공예 느낌 |
+| `cartoon` | 카툰 — 밝고 귀여운 만화 스타일 |
+| `magazine` | 매거진 — 에디토리얼 잡지 레이아웃 |
+| `modern` | 모던 — 깔끔한 현대적 디자인 |
+| `report` | 리포트 — 데이터 중심 비즈니스 |
+| `minimal` | 미니멀 — 여백 중심 심플 디자인 |
+| `sketch` | 스케치 — 연필/크레파스 느낌 |
+| `fairytale-illust` | 동화 일러스트 — 풀블리드 그림책 |
+| `presentation` | 강의 슬라이드형 (기본) |
+| `documentary` | 인포그래픽형 |
+
+스타일이 확인된 후에만 파이프라인을 시작하세요.
+
 ## MP3 입력 시 (5단계)
 
 1. **transcribe**: MP3 → 자막 JSON (Whisper API)
@@ -40,7 +65,7 @@ skills:
 모든 스크립트는 다음 형식으로 실행합니다:
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/scripts/모듈.js" --input 입력경로 --output 출력경로
+node "${CLAUDE_PLUGIN_ROOT}/scripts/모듈.js" --input 입력경로 --output 출력경로
 ```
 
 ## 행동 원칙
