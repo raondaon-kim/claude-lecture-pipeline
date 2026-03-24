@@ -226,13 +226,26 @@ function buildSiblingPath(filePath, suffix) {
 /**
  * Call Anthropic Messages API to get JSON output.
  */
-async function generateJson(client, model, prompt) {
+async function generateJson(client, model, prompt, retries = 1) {
   const response = await client.messages.create({
     model,
     max_tokens: MAX_TOKENS,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }]
   });
+
+  if (response.stop_reason === 'max_tokens' && retries > 0) {
+    console.warn('[lecture-script] Response truncated (max_tokens). Retrying with larger limit...');
+    const retry = await client.messages.create({
+      model,
+      max_tokens: MAX_TOKENS * 2,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: prompt }]
+    });
+    const retryContent = getResponseText(retry);
+    const retryParsed = safeParseJson(retryContent);
+    if (retryParsed) return retryParsed;
+  }
 
   const content = getResponseText(response);
   if (!content) {
@@ -242,7 +255,7 @@ async function generateJson(client, model, prompt) {
   const parsed = safeParseJson(content);
   if (!parsed) {
     const preview = content.slice(0, 200).replace(/\s+/g, ' ');
-    throw new Error(`Failed to parse JSON response: ${preview}...`);
+    throw new Error(`Failed to parse JSON response (stop_reason: ${response.stop_reason}): ${preview}...`);
   }
 
   return parsed;
@@ -261,8 +274,27 @@ async function generateJsonWithWebSearch(client, model, prompt) {
       messages: [{ role: 'user', content: prompt }],
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }]
     });
+
+    // Handle pause_turn: continue the conversation
+    while (response.stop_reason === 'pause_turn') {
+      response = await client.messages.create({
+        model,
+        max_tokens: MAX_TOKENS,
+        system: SYSTEM_PROMPT,
+        messages: [
+          { role: 'user', content: prompt },
+          { role: 'assistant', content: response.content }
+        ],
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }]
+      });
+    }
   } catch (error) {
     console.warn(`Web search call failed. Falling back to plain generation. ${error?.message || ''}`.trim());
+    return generateJson(client, model, prompt);
+  }
+
+  if (response.stop_reason === 'max_tokens') {
+    console.warn('[lecture-script] Web search response truncated. Falling back to plain generation.');
     return generateJson(client, model, prompt);
   }
 
@@ -274,7 +306,7 @@ async function generateJsonWithWebSearch(client, model, prompt) {
   const parsed = safeParseJson(content);
   if (!parsed) {
     const preview = content.slice(0, 200).replace(/\s+/g, ' ');
-    throw new Error(`Failed to parse JSON response: ${preview}...`);
+    throw new Error(`Failed to parse JSON response (stop_reason: ${response.stop_reason}): ${preview}...`);
   }
 
   return parsed;
