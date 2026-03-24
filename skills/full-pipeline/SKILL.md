@@ -12,7 +12,7 @@ MP3 파일을 입력받아 5단계를 순차 실행합니다.
 ## 실행
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/scripts/index.js" --input $ARGUMENTS --style modern
+node "${CLAUDE_PLUGIN_ROOT}/scripts/index.js" --input $ARGUMENTS --style modern
 ```
 
 ## 단계

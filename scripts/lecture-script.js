@@ -6,7 +6,7 @@ import { getRequiredEnv } from './config.js';
 const DEFAULT_OUTPUT = './output/scripts/lecture-script.json';
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const DEFAULT_USE_WEB = true;
-const MAX_TOKENS = 8192;
+const MAX_TOKENS = 16384;
 
 const SYSTEM_PROMPT = `당신은 TTS용 강의 스크립트 작성 전문가입니다.
 입력된 Markdown을 자연스러운 강의 스크립트로 변환하고, 의미 단위로 세그먼트를 나누세요.

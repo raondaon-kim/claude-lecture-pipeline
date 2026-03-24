@@ -11,7 +11,7 @@ Claude Sonnet으로 자막 문법/맞춤법을 검증하고 교정합니다. 타
 ## 실행
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/scripts/validate.js" --input ./output/subtitles/raw.json --output ./output/subtitles/validated.json
+node "${CLAUDE_PLUGIN_ROOT}/scripts/validate.js" --input ./output/subtitles/raw.json --output ./output/subtitles/validated.json
 ```
 
 ## 옵션

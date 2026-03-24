@@ -11,7 +11,7 @@ allowed-tools: Bash(node *, ffmpeg *)
 ## 실행
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/scripts/compose-video.js" \
+node "${CLAUDE_PLUGIN_ROOT}/scripts/compose-video.js" \
   --audio ./input/lecture.mp3 \
   --scenes ./output/scenes/scenes.json \
   --subtitles ./output/subtitles/validated.json \

@@ -11,7 +11,7 @@ Google Gemini로 각 장면에 맞는 1920x1080 PNG 이미지를 생성합니다
 ## 실행
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/scripts/generate-images.js" --input ./output/scenes/scenes.json --output-dir ./output/images --style modern
+node "${CLAUDE_PLUGIN_ROOT}/scripts/generate-images.js" --input ./output/scenes/scenes.json --output-dir ./output/images --style modern
 ```
 
 ## 옵션

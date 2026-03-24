@@ -11,13 +11,13 @@ allowed-tools: Bash(node *)
 ## 1단계: 청크 분할
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/scripts/tts-chunk.js" --input ./output/script.json --output ./output/tts/chunks.json
+node "${CLAUDE_PLUGIN_ROOT}/scripts/tts-chunk.js" --input ./output/script.json --output ./output/tts/chunks.json
 ```
 
 ## 2단계: 음성 생성
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/scripts/tts-generate.js" --input ./output/tts/chunks.json --audio-dir ./output/tts/audio --merged ./output/audio/merged.mp3
+node "${CLAUDE_PLUGIN_ROOT}/scripts/tts-generate.js" --input ./output/tts/chunks.json --audio-dir ./output/tts/audio --merged ./output/audio/merged.mp3
 ```
 
 ## 필수 환경변수

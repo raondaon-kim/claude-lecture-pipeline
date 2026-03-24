@@ -200,7 +200,7 @@ async function generateChunkAudio(
 
 function buildConcatList(files) {
   return files
-    .map((file) => `file '${String(file).replace(/\\/g, '/')}'`)
+    .map((file) => `file '${path.resolve(String(file)).replace(/\\/g, '/')}'`)
     .join('\n');
 }
 

@@ -11,7 +11,7 @@ allowed-tools: Bash(node *)
 ## 실행
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/scripts/analyze.js" --input ./output/subtitles/validated.json --output ./output/scenes/scenes.json --style modern
+node "${CLAUDE_PLUGIN_ROOT}/scripts/analyze.js" --input ./output/subtitles/validated.json --output ./output/scenes/scenes.json --style modern
 ```
 
 ## 옵션
