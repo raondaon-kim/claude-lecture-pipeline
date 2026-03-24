@@ -1,0 +1,17 @@
+{
+  "name": "lecture-pipeline-marketplace",
+  "owner": {
+    "name": "김용현"
+  },
+  "metadata": {
+    "description": "강의 비디오 생성 파이프라인 플러그인 마켓플레이스"
+  },
+  "plugins": [
+    {
+      "name": "lecture-pipeline",
+      "source": ".",
+      "description": "강의 MP3/PDF를 자막, 이미지, 영상으로 자동 변환하는 파이프라인",
+      "version": "1.0.0"
+    }
+  ]
+}
