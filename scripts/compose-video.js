@@ -395,7 +395,7 @@ export async function composeVideo(options) {
     outputPath = DEFAULT_OUTPUT,
     style = DEFAULT_STYLE,
     imagesDir = DEFAULT_IMAGES_DIR,
-    includeSubtitles = true,
+    includeSubtitles = false,
     ffmpegMode: requestedMode
   } = options;
 

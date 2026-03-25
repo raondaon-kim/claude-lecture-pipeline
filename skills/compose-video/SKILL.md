@@ -28,7 +28,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/compose-video.js" \
 | `--output` | 출력 MP4 경로 | `./output/videos/output.mp4` |
 | `--images-dir` | 이미지 디렉토리 | `./output/images` |
 | `--style` | `presentation` / `documentary` | `presentation` |
-| `--no-subtitles` | 자막 미포함 | false |
+| `--no-subtitles` | 자막 미포함 | 기본 OFF (자막 없음) |
 
 ## 출력
 - `./output/videos/output.mp4` (1920x1080, H.264, AAC)
