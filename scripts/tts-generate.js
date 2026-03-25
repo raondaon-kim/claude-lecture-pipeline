@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
-import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import ffmpegPkg from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import { resolveFfmpegCoreUrls } from './ffmpeg-core.js';
@@ -23,6 +22,11 @@ const DEFAULT_LOG_LEVEL = 'info';
 const DEFAULT_MIN_INTERVAL_MS = 1000;
 const DEFAULT_CONCAT_BATCH_SIZE = 10;
 const DEFAULT_FFMPEG_PATH = 'ffmpeg';
+
+// edge-tts defaults
+const DEFAULT_EDGE_VOICE = 'ko-KR-HyunsuMultilingualNeural';
+const DEFAULT_EDGE_RATE = '+0%';
+const DEFAULT_EDGE_PITCH = '+0Hz';
 
 let systemFfmpegChecked = false;
 let systemFfmpegAvailable = false;
@@ -162,7 +166,45 @@ async function requestElevenLabsTts(client, text, voiceId, modelId, outputFormat
 }
 
 /**
- * Generate MP3 for a single chunk.
+ * Generate MP3 for a single chunk using edge-tts (Python CLI).
+ */
+async function requestEdgeTts(text, mp3Path, voice, rate, pitch, maxRetries, logger) {
+  for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
+    try {
+      logger?.debug?.(`[edge-tts] attempt ${attempt} (text chars: ${text.length})`);
+      await new Promise((resolve, reject) => {
+        const args = [
+          '-m', 'edge_tts',
+          '--voice', voice,
+          '--rate', rate,
+          '--pitch', pitch,
+          '--text', text,
+          '--write-media', mp3Path
+        ];
+        const child = spawn('python', args, { windowsHide: true });
+        let stderr = '';
+        child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+        child.on('error', reject);
+        child.on('close', (code) => {
+          if (code === 0) return resolve();
+          reject(new Error(`edge-tts exited with code ${code}: ${stderr.trim().slice(-500)}`));
+        });
+      });
+      const stat = await fs.promises.stat(mp3Path);
+      if (stat.size === 0) throw new Error('edge-tts produced empty file.');
+      logger?.debug?.(`[edge-tts] bytes=${stat.size}`);
+      return;
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      const retryDelay = Math.min(1000 * Math.pow(2, attempt), 10000);
+      logger?.warn?.(`[edge-tts] failed. Retry in ${retryDelay}ms (${attempt}/${maxRetries})`);
+      await delay(retryDelay);
+    }
+  }
+}
+
+/**
+ * Generate MP3 for a single chunk (ElevenLabs or edge-tts).
  */
 async function generateChunkAudio(
   client,
@@ -173,7 +215,8 @@ async function generateChunkAudio(
   modelId,
   outputFormat,
   maxRetries,
-  logger
+  logger,
+  edgeOptions
 ) {
   const text = typeof chunk?.text === 'string' ? chunk.text.trim() : '';
   if (!text) {
@@ -183,17 +226,23 @@ async function generateChunkAudio(
   const filename = buildFilename(index);
   const mp3Path = path.join(outputDir, `${filename}.mp3`);
   logger?.debug?.(`Chunk ${index}: start (text chars: ${text.length})`);
-  const buffer = await requestElevenLabsTts(
-    client,
-    text,
-    voiceId,
-    modelId,
-    outputFormat,
-    maxRetries,
-    logger
-  );
-  logger?.debug?.(`Chunk ${index}: audio bytes=${buffer.length}`);
-  await fs.promises.writeFile(mp3Path, buffer);
+
+  if (edgeOptions) {
+    // edge-tts fallback
+    await requestEdgeTts(
+      text, mp3Path,
+      edgeOptions.voice, edgeOptions.rate, edgeOptions.pitch,
+      maxRetries, logger
+    );
+  } else {
+    // ElevenLabs
+    const buffer = await requestElevenLabsTts(
+      client, text, voiceId, modelId, outputFormat, maxRetries, logger
+    );
+    logger?.debug?.(`Chunk ${index}: audio bytes=${buffer.length}`);
+    await fs.promises.writeFile(mp3Path, buffer);
+  }
+
   logger?.info?.(`Chunk ${index}: saved mp3 ${mp3Path}`);
   return { index, path: mp3Path };
 }
@@ -410,9 +459,26 @@ export async function generateTtsAudio(options = {}) {
 
   const ordered = [...chunks].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
   const { elevenlabsApiKey } = loadConfig();
-  const client = new ElevenLabsClient({ apiKey: elevenlabsApiKey });
+
+  // Determine TTS engine: ElevenLabs or edge-tts
+  let client = null;
+  let edgeOptions = null;
+  const useEdgeTts = !elevenlabsApiKey || options.engine === 'edge-tts';
+
+  if (useEdgeTts) {
+    edgeOptions = {
+      voice: options.edgeVoice || DEFAULT_EDGE_VOICE,
+      rate: options.edgeRate || DEFAULT_EDGE_RATE,
+      pitch: options.edgePitch || DEFAULT_EDGE_PITCH
+    };
+    logger.info(`TTS engine: edge-tts (voice: ${edgeOptions.voice})`);
+  } else {
+    const { ElevenLabsClient } = await import('@elevenlabs/elevenlabs-js');
+    client = new ElevenLabsClient({ apiKey: elevenlabsApiKey });
+    logger.info(`TTS engine: ElevenLabs (model: ${model}, voice: ${voice})`);
+  }
+
   logger.info(`Chunks: ${ordered.length}`);
-  logger.info(`Model: ${model}, Voice: ${voice}, Format: ${outputFormat}`);
   logger.info(`Concurrency: ${concurrency}, maxRetries: ${maxRetries}`);
 
   const results = await runWithConcurrency(ordered, concurrency, async (chunk, index) => {
@@ -426,7 +492,8 @@ export async function generateTtsAudio(options = {}) {
       model,
       outputFormat,
       maxRetries,
-      logger
+      logger,
+      edgeOptions
     );
   });
 
@@ -474,7 +541,21 @@ export async function regenerateTtsChunk(options = {}) {
   const logger = createLogger(logLevel);
   await ensureDir(outputDir);
   const { elevenlabsApiKey } = loadConfig();
-  const client = new ElevenLabsClient({ apiKey: elevenlabsApiKey });
+
+  let client = null;
+  let edgeOptions = null;
+  const useEdgeTts = !elevenlabsApiKey || options.engine === 'edge-tts';
+
+  if (useEdgeTts) {
+    edgeOptions = {
+      voice: options.edgeVoice || DEFAULT_EDGE_VOICE,
+      rate: options.edgeRate || DEFAULT_EDGE_RATE,
+      pitch: options.edgePitch || DEFAULT_EDGE_PITCH
+    };
+  } else {
+    const { ElevenLabsClient } = await import('@elevenlabs/elevenlabs-js');
+    client = new ElevenLabsClient({ apiKey: elevenlabsApiKey });
+  }
 
   return generateChunkAudio(
     client,
@@ -485,7 +566,8 @@ export async function regenerateTtsChunk(options = {}) {
     model,
     outputFormat,
     maxRetries,
-    logger
+    logger,
+    edgeOptions
   );
 }
 
@@ -571,6 +653,18 @@ function parseArgs(argv) {
       i += 1;
     } else if (token === '--skip-merge') {
       args.skipMerge = true;
+    } else if (token === '--engine') {
+      args.engine = argv[i + 1];
+      i += 1;
+    } else if (token === '--edge-voice') {
+      args.edgeVoice = argv[i + 1];
+      i += 1;
+    } else if (token === '--edge-rate') {
+      args.edgeRate = argv[i + 1];
+      i += 1;
+    } else if (token === '--edge-pitch') {
+      args.edgePitch = argv[i + 1];
+      i += 1;
     }
   }
   return args;

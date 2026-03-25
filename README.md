@@ -24,13 +24,14 @@ https://github.com/raondaon-kim/claude-lecture-pipeline.git
 ANTHROPIC_API_KEY=sk-ant-...      # Claude API (자막 검증, 강의 스크립트)
 GOOGLE_API_KEY=AIza...             # Gemini API (PDF OCR, 이미지 생성)
 OPENAI_API_KEY=sk-...              # Whisper API (음성인식)
-ELEVENLABS_API_KEY=...             # ElevenLabs (TTS 음성 합성)
+ELEVENLABS_API_KEY=...             # (선택) ElevenLabs TTS — 없으면 edge-tts 자동 사용
 ```
 
 ### 4. 외부 도구
 
 - **FFmpeg**: 영상 합성에 필요. [다운로드](https://ffmpeg.org/download.html) 후 PATH에 추가
 - **Node.js**: v18 이상
+- **edge-tts**: ElevenLabs 키가 없을 때 무료 TTS 대안. `pip install edge-tts`
 
 ---
 
@@ -183,7 +184,8 @@ lecture-pipeline/
 | Anthropic (Claude) | 자막 검증, 강의 스크립트, 장면 분석 | O |
 | Google (Gemini) | PDF OCR, 이미지 생성 | O |
 | OpenAI (Whisper) | 음성인식 (MP3 입력 시) | MP3 모드만 |
-| ElevenLabs | TTS 음성 합성 (PDF 입력 시) | PDF 모드만 |
+| ElevenLabs | TTS 음성 합성 (PDF 입력 시) | 선택 (없으면 edge-tts) |
+| edge-tts (Python) | 무료 TTS 대안 (`pip install edge-tts`) | ElevenLabs 없을 때 |
 
 ---
 
