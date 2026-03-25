@@ -20,26 +20,33 @@ skills:
 ## 스타일 확인 (필수)
 
 파이프라인 시작 전에 **반드시** 사용자에게 영상 스타일을 확인하세요.
-사용자가 스타일을 지정하지 않았다면, 아래 목록을 보여주고 선택을 요청하세요:
+사용자가 스타일을 지정하지 않았다면, 아래 **전체 목록을 텍스트로 출력**하여 번호로 선택받으세요.
+**AskUserQuestion 도구는 사용하지 마세요** (옵션 수 제한으로 전체 목록을 보여줄 수 없음).
 
-| 스타일 | 설명 |
-|--------|------|
-| `retro` | 레트로 — 빈티지 컬러, 대각선 레이아웃 |
-| `whiteboard` | 화이트보드 — 손그림 스케치 스타일 |
-| `fairytale` | 동화 — 수채화 동화책 분위기 |
-| `watercolor` | 수채화 — 따뜻한 붓터치 페인팅 |
-| `atelier` | 아뜰리에 — 따뜻한 일러스트레이션 |
-| `popup` | 팝업북 — 3D 종이공예 느낌 |
-| `cartoon` | 카툰 — 밝고 귀여운 만화 스타일 |
-| `magazine` | 매거진 — 에디토리얼 잡지 레이아웃 |
-| `modern` | 모던 — 깔끔한 현대적 디자인 |
-| `report` | 리포트 — 데이터 중심 비즈니스 |
-| `minimal` | 미니멀 — 여백 중심 심플 디자인 |
-| `sketch` | 스케치 — 연필/크레파스 느낌 |
-| `fairytale-illust` | 동화 일러스트 — 풀블리드 그림책 |
-| `presentation` | 강의 슬라이드형 (기본) |
-| `documentary` | 인포그래픽형 |
+아래 목록을 그대로 출력하세요:
 
+```
+영상 스타일을 선택하세요 (번호 입력, 기본: 1):
+
+ 1. presentation    — 강의 슬라이드형 (기본)
+ 2. modern          — 깔끔한 현대적 디자인
+ 3. whiteboard      — 손그림 스케치 스타일
+ 4. documentary     — 인포그래픽형
+ 5. retro           — 빈티지 컬러, 대각선 레이아웃
+ 6. fairytale       — 수채화 동화책 분위기
+ 7. watercolor      — 따뜻한 붓터치 페인팅
+ 8. atelier         — 따뜻한 일러스트레이션
+ 9. popup           — 3D 종이공예 느낌
+10. cartoon         — 밝고 귀여운 만화 스타일
+11. magazine        — 에디토리얼 잡지 레이아웃
+12. report          — 데이터 중심 비즈니스
+13. minimal         — 여백 중심 심플 디자인
+14. sketch          — 연필/크레파스 느낌
+15. fairytale-illust — 풀블리드 동화 그림책
+```
+
+사용자가 번호 또는 스타일명으로 응답하면 해당 스타일로 진행합니다.
+응답 없이 엔터만 누르거나 "기본"이라고 하면 `presentation`으로 진행합니다.
 스타일이 확인된 후에만 파이프라인을 시작하세요.
 
 ## MP3 입력 시 (5단계)
@@ -83,7 +90,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/모듈.js" --input 입력경로 --output 출
 | `OPENAI_API_KEY` | Whisper 음성인식 | MP3 모드 필수 |
 | `ANTHROPIC_API_KEY` | Claude 자막검증/분석 | 선택 |
 | `GOOGLE_API_KEY` | Gemini 이미지/OCR/스크립트 | 필수 |
-| `ELEVENLABS_API_KEY` | TTS 음성생성 | PDF 모드 필수 |
+| `ELEVENLABS_API_KEY` | TTS 음성생성 | 선택 (없으면 edge-tts) |
 | `KIE_API_KEY` | 아바타 영상 | 아바타 사용 시 |
 
 ## 출력 디렉토리 구조
