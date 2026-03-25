@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import sharp from 'sharp';
 import { GoogleGenAI } from '@google/genai';
 import { loadConfig } from './config.js';
 import { runWithConcurrency, delay } from './concurrency.js';
@@ -120,15 +121,26 @@ async function generateImage(client, prompt, sceneId, style, outputDir, guides, 
   try {
     const response = await client.models.generateContent({
       model: 'gemini-3-pro-image-preview',
-      contents: enhancedPrompt
+      contents: enhancedPrompt,
+      config: {
+        imageConfig: {
+          aspectRatio: '16:9',
+          imageSize: '2K'
+        }
+      }
     });
     const imageData = extractImageData(response);
     if (!imageData?.data) {
       throw new Error('No image generated');
     }
 
-    const buffer = Buffer.from(imageData.data, 'base64');
-    await fs.promises.writeFile(filepath, buffer);
+    // 2K → 1920x1080 resize with sharp
+    const rawBuffer = Buffer.from(imageData.data, 'base64');
+    const resizedBuffer = await sharp(rawBuffer)
+      .resize(1920, 1080, { fit: 'cover' })
+      .png()
+      .toBuffer();
+    await fs.promises.writeFile(filepath, resizedBuffer);
 
     return {
       sceneId,
